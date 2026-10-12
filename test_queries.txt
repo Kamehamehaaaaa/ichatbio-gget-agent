@@ -1,0 +1,36 @@
+Retrieve the nucleotide sequence for NCBI accession NM_000546.6
+get_sequence() -> finish
+
+What gene is NC_045512.2 and how long is it?
+get_sequence()
+
+What organism is this sequence from? Show me the top 10 hits.
+ATGTTTGTTTTTCTTGTTTTATTGCCACTAGTCTCTAGTCAGTGTGTTAATCTTACAACCAGAACTCAATTACCCCCTGCATACACTAATTCTTTCACACGTGGTGTTTATTACCCTGACAAAGTTTTCAGATCCTCAGTTTTACATTCAACTCAGGACTTGTTCTTACCTTTCTTTTCCAATGTTACTTGGTTCCATGCTATACATGTCTCTGGGACCAATGGTACTAAGAGGTTTGATAACCCTGTCCTACCATTTAATGATGGTGTTTATTTTGCTTCCACTGAGAAGTCTAACATAATAAGAGGCTGGATTTTTGGTACTACTTTAGATTCGAAGACCCAGTCCCTACTTATTGTTAATAACGCTACTAATGTTGTTATTAAAGTCTGTGAATTTCAATTTTGTAATGATCCATTTTTGG
+
+run_blast_sync() -> finish
+
+Which organism does accession MN908947 come from?
+run_blast_sync() retrives sequence internally doesnt use get_sequence() tool -> finish
+
+BLAST this protein against swissprot and give me the top 5 hits:
+MALWMRLLPLLALLALWGPDPAAAFVNQHLCGSHLVEALYLVCGERGFFYTPKTRREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN
+
+run_blast_sync() using swissprot database -> finish
+
+Get complete Zika virus genomes from human hosts collected in Brazil during 2016
+get_virus() -> finish
+
+Download the RefSeq reference genome for measles virus with its metadata
+get_virus() -> finish
+
+Find human genes related to angiotensin converting enzyme 2
+ensembl_search
+
+Tell me about ENSG00000012048, where is it located and what does it do?
+gene_info()
+
+Get the protein sequence of human ACE2
+ensembl_search() -> get_ensembl_sequence()
+
+Get all transcript sequences for the mouse insulin 2 gene (Ins2)
+ensembl_search() → get_ensembl_sequence()

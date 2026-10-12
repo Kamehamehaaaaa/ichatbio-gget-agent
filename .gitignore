@@ -1,0 +1,42 @@
+# ── macOS ──
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# ── Python ──
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# ── Virtual environments ──
+.venv/
+.gget/
+venv/
+env/
+
+# ── Secrets (API keys, LLM credentials) ──
+.env
+.env.*
+!.env.example
+
+# ── IDEs ──
+.vscode/
+.idea/
+*.swp
+
+# ── Testing / evals ──
+.pytest_cache/
+.coverage
+htmlcov/
+.deepeval/
+.mypy_cache/
+.ruff_cache/
+
+# ── gget output files (if a call ever writes to the working dir) ──
+gget_virus_output/
+gget_ref_results.
