@@ -1,0 +1,62 @@
+Gget Sample queries:
+
+Align Sequence:
+
+Align these insulin sequences and tell me which two are most similar:
+>human
+MALWMRLLPLLALLALWGPDPAAAFVNQHLCGSHLVEALYLVCGERGFFYTPKTRREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN
+>mouse
+MALWMRFLPLLALLFLWESHPTQAFVKQHLCGSHLVEALYLVCGERGFFYTPMSRREVEDPQVAQLELGGGPGAGDLQTLALEVAQQKRGIVDQCCTSICSLYQLENYCN
+>pig
+MALWTRLLPLLALLALWAPAPAQAFVNQHLCGSHLVEALYLVCGERGFFYTPKARREAENPQAGAVELGGGLGGLQALALEGPPQKRGIVEQCCTSICSLYQLENYCN
+
+———————
+
+Align the human TP53 mRNA NM_000546.6 with the mouse Trp53 mRNA NM_011640 and tell me how similar they are
+
+————————
+
+Align the SARS-CoV-2 genome MN908947 with the SARS-CoV genome NC_004718.3 (error 20000 residue limit)
+
+————————
+
+What species is this sequence from?
+ATGTTTGTTTTTCTTGTTTTATTGCCACTAGTCTCTAGTCAGTGTGTTAATCTTACAACCAGAACTCAATTACCCCCTGCATACACTAATTCTTTCACACGTGGTGTTTATTACCCTGACAAAGTTTTCAGA
+(Should go to blast and not align sequence)
+
+————————
+
+
+Map to Genome
+
+Where in the human genome is this sequence located? ATGGAGGAGCCGCAGTCAGATCCTAGCGTCGAGCCCCCTCTGAGTCAGGAAACATTTTCAGACCTATGGAAACTACTTCCTGAAAACAACGTTCTGTCCCCCTTGCCGTCCCAAGCAATGGWhere in the human genome is this sequence located? ATGGAGGAGCCGCAGTCAGATCCTAGCGTCGAGCCCCCTCTGAGTCAGGAAACATTTTCAGACCTATGGAAACTACTTCCTGAAAACAACGTTCTGTCCCCCTTGCCGTCCCAAGCAATGG
+
+—————————
+
+Which chromosome is the mouse transcript NM_011640 on, in the mouse genome?
+
+—————————
+
+What organism does this sequence come from? ATGGAGGAGCCGCAGTCAGATCCTAGCGTCGAGCCC
+(Should run Blast)
+
+—————————
+
+Bgee Lookup
+
+Which species have an ortholog of human ACE2?
+
+——————————
+
+Do zebrafish and chicken have an ortholog of human TP53?
+
+——————————
+
+In which tissues is human ACE2 most highly expressed?
+
+——————————
+
+Get the protein sequence of zebrafish tp53 ( should go to emsembl_search -> get_ensembl_sequence
+
+——————————
+

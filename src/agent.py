@@ -35,6 +35,10 @@ from tools.ensembl_search import ensembl_search
 from tools.gene_info import gene_info
 from tools.get_ensembl_sequence import get_ensembl_sequence
 from tools.reference_genome import reference_genome
+from tools.align_sequences import align_sequences
+from tools.map_to_genome import map_to_genome
+from tools.bgee_lookup import bgee_lookup
+
 from util import get_llm_credentials, set_llm_credentials
 
 dotenv.load_dotenv()
@@ -57,6 +61,9 @@ This agent can do the following:
 - Look up Ensembl gene/transcript details: location, biotype, canonical transcript, UniProt and NCBI Gene IDs, function.
 - Fetch nucleotide or protein sequences for Ensembl gene/transcript IDs.
 - Get download links for Ensembl reference genomes and annotations (FASTA, GTF) for any species.
+- Align 2-50 nucleotide or protein sequences (MUSCLE) and report pairwise identity and variable positions.
+- Locate a nucleotide or protein sequence in a reference genome (UCSC BLAT) and return coordinates with browser links.
+- Find a gene's orthologs across ~50 animal species, or the tissues where it is expressed (Bgee).
 """
 
 
@@ -127,6 +134,9 @@ class GgetNucleotideAgent(IChatBioAgent):
             get_sequence,
             run_blast_sync,
             get_virus,
+            align_sequences,
+            map_to_genome,
+            bgee_lookup,
             ensembl_search,
             gene_info,
             get_ensembl_sequence,
@@ -192,6 +202,7 @@ NCBI tools:
 - run_blast_sync: The user wants to identify the organism of a raw sequence (no accession), or to find
   sequences SIMILAR to a sequence or accession (relatives, homologs). Never use BLAST just to look up
   the organism of an accession. Fill in `settings` only with BLAST options the user explicitly asked for.
+
 Ensembl tools:
 - ensembl_search: The user names a gene or keyword (e.g. "ACE2", "insulin receptor") and you need its
   Ensembl ID. Always pass a species (e.g. "homo_sapiens"; default to human only if the user implies it).
@@ -201,6 +212,20 @@ Ensembl tools:
   Use translate=true for protein/amino acid sequences. If they gave a gene name, call ensembl_search first.
 - reference_genome: The user wants reference genome, transcriptome, protein or GTF annotation files or
   download links for a species. Returns links only.
+- bgee_lookup: Orthologs or expression for one Ensembl GENE ID. For orthologs, FIRST find the gene in
+  the species it comes FROM (for "human TP53", ensembl_search species="homo_sapiens"), pass THAT gene ID,
+  and put the species being asked about in species_filter (e.g. ["zebrafish"]). Never search the gene in
+  the target species and then filter for the source species. data="expression" for "where/in which
+  tissues is X expressed". Use the search match whose gene name exactly equals the requested gene.
+
+Analysis tools:
+- align_sequences: The user wants to align or compare 2-50 sequences, find where they differ, or see
+  which are most similar. Pass pasted sequences as multi-FASTA text in `fasta` and/or NCBI accessions in
+  `accessions`. Not for identifying an unknown sequence (use run_blast_sync) or whole genomes.
+- map_to_genome: The user asks where a sequence, primer, read or transcript is located in a genome,
+  which chromosome it is on, or its coordinates. Pass a pasted `sequence` or an NCBI `accession`, and an
+  `assembly` (species name like "human", "mouse", "zebrafish", or a UCSC code like "hg19"; default human).
+  Not for identifying an unknown organism (use run_blast_sync).
 
 Ending:
 - finish: The request is fulfilled. Summarize the results for the user. For BLAST, start with a
@@ -221,6 +246,14 @@ Typical flows:
 7. "Tell me about ENSG00000130234"                  -> gene_info(ens_ids=["ENSG00000130234"]) -> finish
 8. "Protein sequence of human ACE2"                 -> ensembl_search -> get_ensembl_sequence(ens_ids=[top ID], translate=true) -> finish
 9. "Human genome FASTA and GTF download links"      -> reference_genome(species="homo_sapiens", which=["dna", "gtf"]) -> finish
+10. "Align these 3 insulin protein sequences: >human ... >mouse ... >pig ..."  -> align_sequences(fasta=...) -> finish
+11. "Compare NM_000546.6 with my sequence: >mine ATG..."                       -> align_sequences(fasta=">mine ...", accessions=["NM_000546.6"]) -> finish
+12. "Where in the human genome is this sequence? ATGGAGGAG..."      -> map_to_genome(sequence=...) -> finish
+13. "Which mouse chromosome is NM_011640 on?"                       -> map_to_genome(accession="NM_011640", assembly="mouse") -> finish
+14. "Which species have an ortholog of human ACE2?"     -> ensembl_search -> bgee_lookup(ensembl_gene_id=..., data="orthologs") -> finish
+15. "Does zebrafish have a TP53 ortholog?"  -> ensembl_search(searchwords=["TP53"], species="homo_sapiens")
+                                            -> bgee_lookup(ensembl_gene_id=<human TP53 ID>, species_filter=["zebrafish"]) -> finish
+16. "In which tissues is human ACE2 expressed?"          -> ensembl_search -> bgee_lookup(..., data="expression") -> finish
 
 When ensembl_search returns several matches, use the one whose gene name exactly matches the user's
 gene; if it is ambiguous, list the candidates in finish instead of guessing.
@@ -230,6 +263,13 @@ actually included, call abort and ask the user to provide the full sequence.
 
 If a tool returns an ERROR, either retry once with corrected arguments or abort and explain the error.
 Do not call the same tool repeatedly with the same arguments.
+
+For alignments, state the most and least similar pair with percentageidentity and the share of conserved columns.
+
+For genome locations, give the top hit as chromosome:start-end (strand) with % matched, and include its UCSC browser link.
+
+For orthologs, give the species count and name the requested species' ortholog genes; for expression,
+list the top tissues with their scores.
 """
 
 def create_app() -> Starlette:

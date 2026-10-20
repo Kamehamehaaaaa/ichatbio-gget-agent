@@ -27,3 +27,10 @@ dependencies = [
 pythonpath = ["src", "tests"]
 log_cli = true
 log_cli_level = "INFO"
+
+[dependency-groups]
+dev = [
+    "deepeval>=4.3.1",
+    "pytest>=8.3.5",
+    "pyyaml>=6.0.3",
+]

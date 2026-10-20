@@ -1,0 +1,278 @@
+# Regression cases for the gget agent.
+#
+# Fields
+#   id               unique name (used in pytest output and results files)
+#   query            the request text the agent receives
+#   sequence         optional; goes in the entrypoint `sequence` field if agent.py has one, else appended to query
+#   expected_tools   tools that must be called, in order (finish/abort not listed). Each may carry `args`:
+#                      "text" substring | "$present" | "$absent" | true/5 exact | [a, b] all | {any_of: [a, b]}
+#                      | nested {key: rule} for settings/filters
+#   ordered          default true; false = expected tools may be called in any order
+#   forbidden_tools  tools that must NOT be called (routing checks)
+#   outcome          finish (default) | abort | either
+#   max_tool_calls   default 6; more work calls = likely loop
+#   answer_contains  facts the final answer must mention; a nested list = any one of the alternatives
+#   expected_answer  reference answer for the LLM judge (only used when EVAL_JUDGE_MODEL is set)
+#   grounded_threshold  default 0.8; share of answer numbers that must appear in tool outputs
+#   slow             true = BLAST / NCBI Virus (minutes); skip with:  pytest evals -m "not slow"
+
+# ── NCBI nuccore ──────────────────────────────────────────────────────────────
+
+- id: record_by_accession
+  query: Retrieve the nucleotide sequence for NCBI accession NM_000546.6
+  expected_tools:
+    - name: get_sequence
+      args: {accession: NM_000546}
+  forbidden_tools: [run_blast_sync]
+  answer_contains:
+    - [TP53, tumor protein p53]
+    - ["2,512", "2512"]
+  expected_answer: NM_000546.6 is the Homo sapiens tumor protein p53 (TP53) transcript variant 1 mRNA, 2,512 bp; the full FASTA is saved as an artifact.
+
+- id: organism_of_accession
+  query: Which organism does accession MN908947 come from?
+  expected_tools:
+    - name: get_sequence
+      args: {accession: MN908947}
+  forbidden_tools: [run_blast_sync]
+  answer_contains:
+    - [SARS-CoV-2, severe acute respiratory syndrome coronavirus 2]
+  expected_answer: MN908947 is a SARS-CoV-2 (severe acute respiratory syndrome coronavirus 2) genome, read directly from the record without BLAST.
+
+# ── BLAST ─────────────────────────────────────────────────────────────────────
+
+- id: blast_pasted_nucleotide
+  slow: true
+  query: What organism is this sequence from? Show me the top 10 hits.
+  sequence: ATGTTTGTTTTTCTTGTTTTATTGCCACTAGTCTCTAGTCAGTGTGTTAATCTTACAACCAGAACTCAATTACCCCCTGCATACACTAATTCTTTCACACGTGGTGTTTATTACCCTGACAAAGTTTTCAGATCCTCAGTTTTACATTCAACTCAGGACTTGTTCTTACCTTTCTTTTCCAATGTTACTTGGTTCCATGCTATACATGTCTCTGGGACCAATGGTACTAAGAGGTTTGATAACCCTGTCCTACCATTTAATGATGGTGTTTATTTTGCTTCCACTGAGAAGTCTAACATAATAAGAGGCTGGATTTTTGGTACTACTTTAGATTCGAAGACCCAGTCCCTACTTATTGTTAATAACGCTACTAATGTTGTTATTAAAGTCTGTGAATTTCAATTTTGTAATGATCCATTTTTGG
+  expected_tools:
+    - name: run_blast_sync
+      args: {sequence: $present, settings: {limit: 10}}
+  forbidden_tools: [align_sequences, map_to_genome]
+  answer_contains:
+    - [SARS-CoV-2, severe acute respiratory syndrome coronavirus 2]
+    - ["%", identity]
+  expected_answer: The sequence is from SARS-CoV-2 (spike gene), with the top hit at about 99-100% identity; the answer lists up to 10 hits with % identity, query coverage and e-value.
+
+- id: blast_relatives_of_accession
+  slow: true
+  query: What are the 10 closest relatives of the genome MN908947?
+  expected_tools:
+    - name: run_blast_sync
+      args: {accession: MN908947}
+  answer_contains:
+    - [coronavirus, SARS]
+  expected_answer: BLAST of MN908947 returns SARS-CoV-2 genomes and close relatives such as bat and pangolin coronaviruses, with % identity and coverage for each.
+
+- id: blast_protein_swissprot
+  slow: true
+  query: "BLAST this protein against swissprot and give me the top 5 hits: MALWMRLLPLLALLALWGPDPAAAFVNQHLCGSHLVEALYLVCGERGFFYTPKTRREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN"
+  expected_tools:
+    - name: run_blast_sync
+      args: {sequence: $present, settings: {database: swissprot, limit: 5}}
+  answer_contains:
+    - insulin
+  expected_answer: The top hit is human insulin (preproinsulin), followed by insulin from other mammals, with % identity and e-values.
+
+# ── NCBI Virus ────────────────────────────────────────────────────────────────
+
+- id: virus_filtered
+  slow: true
+  query: Get complete Zika virus genomes from human hosts collected in Brazil during 2016
+  expected_tools:
+    - name: get_virus
+      args:
+        virus: zika
+        filters:
+          nuc_completeness: complete
+          host: {any_of: [human, homo]}
+          geographic_location: brazil
+          min_collection_date: "2016"
+  answer_contains:
+    - [record, genome, sequence]
+  expected_answer: Reports how many complete Zika genomes from human hosts in Brazil collected in 2016 were found, with example accessions; metadata CSV and FASTA saved as artifacts.
+
+- id: virus_refseq
+  query: Download the RefSeq reference genome for measles virus with its metadata
+  expected_tools:
+    - name: get_virus
+      args: {virus: measles, filters: {source_database: refseq}}
+  answer_contains:
+    - [measles, morbillivirus]
+  expected_answer: Returns the measles virus RefSeq reference genome (a single record) with its metadata saved as artifacts.
+
+# ── Ensembl ───────────────────────────────────────────────────────────────────
+
+- id: ensembl_search_gene
+  query: Find the Ensembl ID for the human angiotensin converting enzyme 2 gene
+  expected_tools:
+    - name: ensembl_search
+      args: {species: {any_of: [homo, human]}}
+  answer_contains:
+    - ENSG00000130234
+  expected_answer: Human ACE2 is ENSG00000130234.
+
+- id: gene_info_by_id
+  query: Tell me about ENSG00000012048 — where is it located and what does it do?
+  expected_tools:
+    - name: gene_info
+      args: {ens_ids: [ENSG00000012048]}
+  answer_contains:
+    - BRCA1
+    - [chr17, chromosome 17]
+  expected_answer: ENSG00000012048 is BRCA1, a protein-coding gene on chromosome 17 involved in DNA repair, with its canonical transcript and UniProt/NCBI IDs.
+
+- id: name_to_protein_chain
+  query: Get the protein sequence of human ACE2
+  expected_tools:
+    - name: ensembl_search
+      args: {species: {any_of: [homo, human]}}
+    - name: get_ensembl_sequence
+      args: {translate: true}
+  answer_contains:
+    - "805"
+  expected_answer: The human ACE2 canonical protein is 805 amino acids; the FASTA is saved as an artifact.
+
+- id: isoforms_other_species
+  query: Get all transcript sequences for the mouse insulin 2 gene (Ins2)
+  expected_tools:
+    - name: ensembl_search
+      args: {species: {any_of: [mus, mouse]}}
+    - name: get_ensembl_sequence
+      args: {isoforms: true}
+  answer_contains:
+    - Ins2
+  expected_answer: Returns the transcript isoforms of mouse Ins2 with their lengths; sequences saved as FASTA.
+
+- id: reference_genome_links
+  query: Give me download links for the zebrafish reference genome FASTA and GTF annotation
+  expected_tools:
+    - name: reference_genome
+      args: {species: {any_of: [danio, zebrafish]}, which: {any_of: [dna, gtf]}}
+  max_tool_calls: 2   # one call with both file types is ideal; two separate calls are acceptable
+  answer_contains:
+    - [ftp, http]
+    - [gtf, GTF]
+    - [.fa, fasta, dna]
+  expected_answer: Gives Ensembl download links for the zebrafish genome FASTA and GTF with release number and file sizes; nothing is downloaded.
+
+# ── Alignment (gget.muscle) ───────────────────────────────────────────────────
+
+- id: align_proteins
+  query: Align these insulin sequences and tell me which two are most similar.
+  sequence: |
+    >human
+    MALWMRLLPLLALLALWGPDPAAAFVNQHLCGSHLVEALYLVCGERGFFYTPKTRREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN
+    >mouse
+    MALWMRFLPLLALLFLWESHPTQAFVKQHLCGSHLVEALYLVCGERGFFYTPMSRREVEDPQVAQLELGGGPGAGDLQTLALEVAQQKRGIVDQCCTSICSLYQLENYCN
+    >pig
+    MALWTRLLPLLALLALWAPAPAQAFVNQHLCGSHLVEALYLVCGERGFFYTPKARREAENPQAGAVELGGGLGGLQALALEGPPQKRGIVEQCCTSICSLYQLENYCN
+  expected_tools:
+    - name: align_sequences
+      args: {fasta: [human, mouse, pig]}
+  forbidden_tools: [run_blast_sync]
+  answer_contains:
+    - human
+    - pig
+    - ["87"]
+  expected_answer: Human and pig insulin are the most similar pair at about 87% identity; about 75% of alignment columns are fully conserved.
+
+- id: align_rejects_whole_genomes
+  query: Align the SARS-CoV-2 genome MN908947 with the SARS-CoV genome NC_004718.3
+  expected_tools:
+    - name: align_sequences
+      args: {accessions: [MN908947, NC_004718]}
+  outcome: either
+  answer_contains:
+    - ["20,000", "20000", limit, too long, gene, region]
+  expected_answer: The genomes (~30,000 bases each) exceed the 20,000-residue alignment limit; suggests aligning a single gene or region instead. No alignment results are invented.
+
+# ── Genome location (gget.blat) ───────────────────────────────────────────────
+
+- id: map_sequence_human
+  query: Where in the human genome is this sequence located?
+  sequence: ATGGAGGAGCCGCAGTCAGATCCTAGCGTCGAGCCCCCTCTGAGTCAGGAAACATTTTCAGACCTATGGAAACTACTTCCTGAAAACAACGTTCTGTCCCCCTTGCCGTCCCAAGCAATGG
+  expected_tools:
+    - name: map_to_genome
+      args: {sequence: $present}
+  forbidden_tools: [run_blast_sync]
+  answer_contains:
+    - chr17
+    - genome.ucsc.edu
+  expected_answer: The top hit is on chr17 (the TP53 locus, minus strand) at about 100% matched, with a UCSC Genome Browser link.
+
+- id: map_accession_mouse
+  query: Which chromosome is the mouse transcript NM_011640 on, in the mouse genome?
+  expected_tools:
+    - name: map_to_genome
+      args: {accession: NM_011640, assembly: {any_of: [mouse, mm39, mus]}}
+  answer_contains:
+    - chr11
+  expected_answer: Mouse Trp53 (NM_011640) maps to chr11 in mm39, with exons as separate nearby hits.
+
+# ── Orthologs and expression (gget.bgee) ──────────────────────────────────────
+
+- id: orthologs_all_species
+  query: Which species have an ortholog of human ACE2?
+  expected_tools:
+    - name: ensembl_search
+    - name: bgee_lookup
+      args: {ensembl_gene_id: ENSG00000130234, data: orthologs}
+  answer_contains:
+    - [Mus musculus, mouse]
+  expected_answer: Bgee lists ACE2 orthologs across many species (count given), including mouse Ace2 and zebrafish ace2.
+
+- id: orthologs_specific_species
+  query: Does zebrafish have an ortholog of human TP53?
+  expected_tools:
+    - name: ensembl_search
+      args: {species: {any_of: [homo, human]}}          # search the gene in the species it is FROM
+    - name: bgee_lookup
+      args: {ensembl_gene_id: ENSG00000141510, species_filter: {any_of: [zebrafish, danio]}}
+  answer_contains:
+    - [tp53, TP53]
+    - ENSDARG00000035559                                 # zebrafish tp53, not TP53I11 or another gene
+  expected_answer: Yes; zebrafish has a tp53 ortholog, named with its Ensembl gene ID.
+
+- id: expression_tissues
+  query: In which tissues is human ACE2 most highly expressed?
+  expected_tools:
+    - name: ensembl_search
+    - name: bgee_lookup
+      args: {data: expression}
+  answer_contains:
+    - [intestin, duodenum, ileum, jejunum, kidney, testis]
+  expected_answer: ACE2 is most highly expressed in the small intestine (duodenum/ileum), kidney and testis, ranked by Bgee expression score.
+
+# ── Routing checks ────────────────────────────────────────────────────────────
+
+- id: routing_protein_not_orthologs
+  query: Get the protein sequence of zebrafish tp53
+  expected_tools:
+    - name: ensembl_search
+      args: {species: {any_of: [danio, zebrafish]}}
+    - name: get_ensembl_sequence
+      args: {translate: true}
+  forbidden_tools: [bgee_lookup, run_blast_sync]
+  answer_contains:
+    - [tp53, TP53]
+
+# ── Failure paths ─────────────────────────────────────────────────────────────
+
+- id: missing_sequence
+  query: BLAST my sequence and tell me what species it is
+  outcome: abort
+  # Ideal: abort right away. Acceptable: one BLAST attempt that the placeholder guard rejects, then abort.
+  max_tool_calls: 1
+  forbidden_tools: [align_sequences, map_to_genome]
+  answer_contains:
+    - sequence
+  expected_answer: Asks the user to provide the sequence; does not run BLAST or invent a sequence.
+
+- id: out_of_scope
+  query: Predict the 3D structure of the ACE2 protein
+  outcome: abort
+  max_tool_calls: 1
+  answer_contains:
+    - [structure, cannot, can't, not able, unable, outside]
+  expected_answer: Explains that structure prediction is outside the agent's capabilities.

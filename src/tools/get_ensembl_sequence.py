@@ -1,6 +1,7 @@
 import json
 
 import gget
+import httpx
 
 from context import current_context
 from tools.gget_runner import GgetTimeout, run_gget
@@ -9,6 +10,7 @@ from tools.util import context_tool
 MAX_IDS = 20
 PREVIEW_LEN = 60
 FASTA_LINE_WIDTH = 70
+ENSEMBL_REST = "https://rest.ensembl.org"
 
 
 def parse_fasta_list(lines: list[str] | None) -> list[tuple[str, str]]:
@@ -41,7 +43,44 @@ async def fetch_ensembl_sequences(
         verbose=False,
         label="Ensembl sequence fetch",
     )
-    return parse_fasta_list(lines)
+    records = parse_fasta_list(lines)
+
+    # gget.seq gets proteins from UniProt via the Ensembl transcript ID. Many non-human transcripts
+    # (e.g. zebrafish tp53) have no UniProt link, so nothing comes back. Fall back to Ensembl's own
+    # translations for each ID.
+    if translate and not records:
+        for ens_id in ens_ids:
+            fallback = await _ensembl_protein_fallback(ens_id, isoforms)
+            if fallback:
+                await process.log(f"No UniProt entry for {ens_id}; using Ensembl's protein translation")
+            records += fallback
+    return records
+
+
+async def _ensembl_protein_fallback(ens_id: str, isoforms: bool) -> list[tuple[str, str]]:
+    """Protein sequence(s) for an Ensembl gene/transcript straight from the Ensembl REST API."""
+    try:
+        async with httpx.AsyncClient(timeout=30, follow_redirects=True) as http:
+            r = await http.get(
+                f"{ENSEMBL_REST}/sequence/id/{ens_id.split('.')[0]}",
+                params={"type": "protein", "multiple_sequences": "1"},
+                headers={"Content-Type": "application/json"},
+            )
+        if not r.is_success:
+            return []
+        data = r.json()
+    except (httpx.HTTPError, ValueError):
+        return []
+    items = data if isinstance(data, list) else [data]
+    records = [
+        (f"{d.get('id')} protein translation of {ens_id} (source: Ensembl; no UniProt entry)", d["seq"])
+        for d in items
+        if d.get("seq")
+    ]
+    if records and not isoforms:
+        # Ensembl returns every translated isoform for a gene; keep the longest as the representative
+        records = [max(records, key=lambda rec: len(rec[1]))]
+    return records
 
 
 @context_tool

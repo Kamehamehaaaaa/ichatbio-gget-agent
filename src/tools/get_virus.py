@@ -117,6 +117,9 @@ async def get_virus(
         virus: Virus name (e.g. "Zika virus"), NCBI taxonomy ID (e.g. "64320"), or accession number.
         is_accession: True if `virus` is an accession number (e.g. "NC_045512.2").
         filters: Optional NCBI Virus filters; omit entirely if the user specified none.
+    
+    If no filters are given, only RefSeq reference genomes are searched; pass filters (or
+    source_database="genbank") to search all submitted records.
 
     Returns JSON with record counts, top hosts/locations/lineages, date and length ranges and example
     records, or an ERROR message.
@@ -124,6 +127,13 @@ async def get_virus(
     context = current_context.get()
     virus = virus.strip()
     kwargs = filters.model_dump(exclude_none=True) if filters else {}
+
+    # Guard: a bare name query ("measles virus", "SARS-CoV-2") can download tens of thousands of records.
+    # With no filters, search only RefSeq reference genomes and tell the agent how to widen the search.
+    defaulted_to_refseq = False
+    if not is_accession and not kwargs:
+        kwargs = {"source_database": "refseq"}
+        defaulted_to_refseq = True
 
     async with context.begin_process(f"Downloading {virus} data from NCBI Virus") as process:
         await process.log(f"Querying NCBI Virus for '{virus}' with {kwargs or 'no filters'}")
@@ -232,7 +242,11 @@ async def get_virus(
     summary.update(
         {
             "query": virus,
-            "filters_used": kwargs or "none",
+            "filters_used": (
+                {"filter_note": "No filters were given, so only RefSeq reference genomes were searched. "
+                 "To search all records, add filters (host, location, dates, completeness) or source_database='genbank'."}
+                if defaulted_to_refseq else {}
+            ),
             "note": f"Full metadata table saved as a CSV artifact. {fasta_note}",
         }
     )

@@ -1,0 +1,625 @@
+{
+  "timestamp": "20261019-194854",
+  "cases": [
+    {
+      "id": "record_by_accession",
+      "passed": false,
+      "seconds": 0.0,
+      "outcome": "error",
+      "tools": [],
+      "answer": "",
+      "metrics": {
+        "Tool Correctness": {
+          "score": 0,
+          "passed": false,
+          "reason": "[\n\t Tool Calling Reason: Incorrect tool usage: missing tools ['get_sequence'] and out-of-order tools ['get_sequence']; expected ['get_sequence'], called []. See more details above.\n\t Tool Selection Reason: No available tools were provided to assess tool selection criteria\n]\n"
+        },
+        "Tool arguments": {
+          "score": 0,
+          "passed": false,
+          "reason": "get_sequence was never called"
+        },
+        "Outcome": {
+          "score": 0,
+          "passed": false,
+          "reason": "agent error: KeyError: 'USE_LLM_PROXY'; ended with 'error', expected 'finish'"
+        },
+        "Answer contains": {
+          "score": 0,
+          "passed": false,
+          "reason": "Missing: TP53 / tumor protein p53; 2,512 / 2512"
+        },
+        "Grounded numbers": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "No numbers to check."
+        }
+      }
+    },
+    {
+      "id": "organism_of_accession",
+      "passed": false,
+      "seconds": 0.0,
+      "outcome": "error",
+      "tools": [],
+      "answer": "",
+      "metrics": {
+        "Tool Correctness": {
+          "score": 0,
+          "passed": false,
+          "reason": "[\n\t Tool Calling Reason: Incorrect tool usage: missing tools ['get_sequence'] and out-of-order tools ['get_sequence']; expected ['get_sequence'], called []. See more details above.\n\t Tool Selection Reason: No available tools were provided to assess tool selection criteria\n]\n"
+        },
+        "Tool arguments": {
+          "score": 0,
+          "passed": false,
+          "reason": "get_sequence was never called"
+        },
+        "Outcome": {
+          "score": 0,
+          "passed": false,
+          "reason": "agent error: KeyError: 'USE_LLM_PROXY'; ended with 'error', expected 'finish'"
+        },
+        "Answer contains": {
+          "score": 0,
+          "passed": false,
+          "reason": "Missing: SARS-CoV-2 / severe acute respiratory syndrome coronavirus 2"
+        },
+        "Grounded numbers": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "No numbers to check."
+        }
+      }
+    },
+    {
+      "id": "virus_refseq",
+      "passed": false,
+      "seconds": 0.0,
+      "outcome": "error",
+      "tools": [],
+      "answer": "",
+      "metrics": {
+        "Tool Correctness": {
+          "score": 0,
+          "passed": false,
+          "reason": "[\n\t Tool Calling Reason: Incorrect tool usage: missing tools ['get_virus'] and out-of-order tools ['get_virus']; expected ['get_virus'], called []. See more details above.\n\t Tool Selection Reason: No available tools were provided to assess tool selection criteria\n]\n"
+        },
+        "Tool arguments": {
+          "score": 0,
+          "passed": false,
+          "reason": "get_virus was never called"
+        },
+        "Outcome": {
+          "score": 0,
+          "passed": false,
+          "reason": "agent error: KeyError: 'USE_LLM_PROXY'; ended with 'error', expected 'finish'"
+        },
+        "Answer contains": {
+          "score": 0,
+          "passed": false,
+          "reason": "Missing: measles / morbillivirus"
+        },
+        "Grounded numbers": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "No numbers to check."
+        }
+      }
+    },
+    {
+      "id": "ensembl_search_gene",
+      "passed": false,
+      "seconds": 0.0,
+      "outcome": "error",
+      "tools": [],
+      "answer": "",
+      "metrics": {
+        "Tool Correctness": {
+          "score": 0,
+          "passed": false,
+          "reason": "[\n\t Tool Calling Reason: Incorrect tool usage: missing tools ['ensembl_search'] and out-of-order tools ['ensembl_search']; expected ['ensembl_search'], called []. See more details above.\n\t Tool Selection Reason: No available tools were provided to assess tool selection criteria\n]\n"
+        },
+        "Tool arguments": {
+          "score": 0,
+          "passed": false,
+          "reason": "ensembl_search was never called"
+        },
+        "Outcome": {
+          "score": 0,
+          "passed": false,
+          "reason": "agent error: KeyError: 'USE_LLM_PROXY'; ended with 'error', expected 'finish'"
+        },
+        "Answer contains": {
+          "score": 0,
+          "passed": false,
+          "reason": "Missing: ENSG00000130234"
+        },
+        "Grounded numbers": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "No numbers to check."
+        }
+      }
+    },
+    {
+      "id": "gene_info_by_id",
+      "passed": false,
+      "seconds": 0.0,
+      "outcome": "error",
+      "tools": [],
+      "answer": "",
+      "metrics": {
+        "Tool Correctness": {
+          "score": 0,
+          "passed": false,
+          "reason": "[\n\t Tool Calling Reason: Incorrect tool usage: missing tools ['gene_info'] and out-of-order tools ['gene_info']; expected ['gene_info'], called []. See more details above.\n\t Tool Selection Reason: No available tools were provided to assess tool selection criteria\n]\n"
+        },
+        "Tool arguments": {
+          "score": 0,
+          "passed": false,
+          "reason": "gene_info was never called"
+        },
+        "Outcome": {
+          "score": 0,
+          "passed": false,
+          "reason": "agent error: KeyError: 'USE_LLM_PROXY'; ended with 'error', expected 'finish'"
+        },
+        "Answer contains": {
+          "score": 0,
+          "passed": false,
+          "reason": "Missing: BRCA1; chr17 / chromosome 17"
+        },
+        "Grounded numbers": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "No numbers to check."
+        }
+      }
+    },
+    {
+      "id": "name_to_protein_chain",
+      "passed": false,
+      "seconds": 0.0,
+      "outcome": "error",
+      "tools": [],
+      "answer": "",
+      "metrics": {
+        "Tool Correctness": {
+          "score": 0,
+          "passed": false,
+          "reason": "[\n\t Tool Calling Reason: Incorrect tool usage: missing tools ['get_ensembl_sequence', 'ensembl_search'] and out-of-order tools ['get_ensembl_sequence', 'ensembl_search']; expected ['ensembl_search', 'get_ensembl_sequence'], called []. See more details above.\n\t Tool Selection Reason: No available tools were provided to assess tool selection criteria\n]\n"
+        },
+        "Tool arguments": {
+          "score": 0,
+          "passed": false,
+          "reason": "ensembl_search was never called | get_ensembl_sequence was never called"
+        },
+        "Outcome": {
+          "score": 0,
+          "passed": false,
+          "reason": "agent error: KeyError: 'USE_LLM_PROXY'; ended with 'error', expected 'finish'"
+        },
+        "Answer contains": {
+          "score": 0,
+          "passed": false,
+          "reason": "Missing: 805"
+        },
+        "Grounded numbers": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "No numbers to check."
+        }
+      }
+    },
+    {
+      "id": "isoforms_other_species",
+      "passed": false,
+      "seconds": 0.0,
+      "outcome": "error",
+      "tools": [],
+      "answer": "",
+      "metrics": {
+        "Tool Correctness": {
+          "score": 0,
+          "passed": false,
+          "reason": "[\n\t Tool Calling Reason: Incorrect tool usage: missing tools ['get_ensembl_sequence', 'ensembl_search'] and out-of-order tools ['get_ensembl_sequence', 'ensembl_search']; expected ['ensembl_search', 'get_ensembl_sequence'], called []. See more details above.\n\t Tool Selection Reason: No available tools were provided to assess tool selection criteria\n]\n"
+        },
+        "Tool arguments": {
+          "score": 0,
+          "passed": false,
+          "reason": "ensembl_search was never called | get_ensembl_sequence was never called"
+        },
+        "Outcome": {
+          "score": 0,
+          "passed": false,
+          "reason": "agent error: KeyError: 'USE_LLM_PROXY'; ended with 'error', expected 'finish'"
+        },
+        "Answer contains": {
+          "score": 0,
+          "passed": false,
+          "reason": "Missing: Ins2"
+        },
+        "Grounded numbers": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "No numbers to check."
+        }
+      }
+    },
+    {
+      "id": "reference_genome_links",
+      "passed": false,
+      "seconds": 0.0,
+      "outcome": "error",
+      "tools": [],
+      "answer": "",
+      "metrics": {
+        "Tool Correctness": {
+          "score": 0,
+          "passed": false,
+          "reason": "[\n\t Tool Calling Reason: Incorrect tool usage: missing tools ['reference_genome'] and out-of-order tools ['reference_genome']; expected ['reference_genome'], called []. See more details above.\n\t Tool Selection Reason: No available tools were provided to assess tool selection criteria\n]\n"
+        },
+        "Tool arguments": {
+          "score": 0,
+          "passed": false,
+          "reason": "reference_genome was never called"
+        },
+        "Outcome": {
+          "score": 0,
+          "passed": false,
+          "reason": "agent error: KeyError: 'USE_LLM_PROXY'; ended with 'error', expected 'finish'"
+        },
+        "Answer contains": {
+          "score": 0,
+          "passed": false,
+          "reason": "Missing: ftp / http; gtf / GTF"
+        },
+        "Grounded numbers": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "No numbers to check."
+        }
+      }
+    },
+    {
+      "id": "align_proteins",
+      "passed": false,
+      "seconds": 0.0,
+      "outcome": "error",
+      "tools": [],
+      "answer": "",
+      "metrics": {
+        "Tool Correctness": {
+          "score": 0,
+          "passed": false,
+          "reason": "[\n\t Tool Calling Reason: Incorrect tool usage: missing tools ['align_sequences'] and out-of-order tools ['align_sequences']; expected ['align_sequences'], called []. See more details above.\n\t Tool Selection Reason: No available tools were provided to assess tool selection criteria\n]\n"
+        },
+        "Tool arguments": {
+          "score": 0,
+          "passed": false,
+          "reason": "align_sequences was never called"
+        },
+        "Outcome": {
+          "score": 0,
+          "passed": false,
+          "reason": "agent error: KeyError: 'USE_LLM_PROXY'; ended with 'error', expected 'finish'"
+        },
+        "Answer contains": {
+          "score": 0,
+          "passed": false,
+          "reason": "Missing: human; pig; 87"
+        },
+        "Grounded numbers": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "No numbers to check."
+        }
+      }
+    },
+    {
+      "id": "align_rejects_whole_genomes",
+      "passed": false,
+      "seconds": 0.0,
+      "outcome": "error",
+      "tools": [],
+      "answer": "",
+      "metrics": {
+        "Tool Correctness": {
+          "score": 0,
+          "passed": false,
+          "reason": "[\n\t Tool Calling Reason: Incorrect tool usage: missing tools ['align_sequences'] and out-of-order tools ['align_sequences']; expected ['align_sequences'], called []. See more details above.\n\t Tool Selection Reason: No available tools were provided to assess tool selection criteria\n]\n"
+        },
+        "Tool arguments": {
+          "score": 0,
+          "passed": false,
+          "reason": "align_sequences was never called"
+        },
+        "Outcome": {
+          "score": 0,
+          "passed": false,
+          "reason": "agent error: KeyError: 'USE_LLM_PROXY'; ended with 'error', expected finish or abort"
+        },
+        "Answer contains": {
+          "score": 0,
+          "passed": false,
+          "reason": "Missing: 20,000 / 20000 / limit / too long / gene / region"
+        },
+        "Grounded numbers": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "No numbers to check."
+        }
+      }
+    },
+    {
+      "id": "map_sequence_human",
+      "passed": false,
+      "seconds": 0.0,
+      "outcome": "error",
+      "tools": [],
+      "answer": "",
+      "metrics": {
+        "Tool Correctness": {
+          "score": 0,
+          "passed": false,
+          "reason": "[\n\t Tool Calling Reason: Incorrect tool usage: missing tools ['map_to_genome'] and out-of-order tools ['map_to_genome']; expected ['map_to_genome'], called []. See more details above.\n\t Tool Selection Reason: No available tools were provided to assess tool selection criteria\n]\n"
+        },
+        "Tool arguments": {
+          "score": 0,
+          "passed": false,
+          "reason": "map_to_genome was never called"
+        },
+        "Outcome": {
+          "score": 0,
+          "passed": false,
+          "reason": "agent error: KeyError: 'USE_LLM_PROXY'; ended with 'error', expected 'finish'"
+        },
+        "Answer contains": {
+          "score": 0,
+          "passed": false,
+          "reason": "Missing: chr17; genome.ucsc.edu"
+        },
+        "Grounded numbers": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "No numbers to check."
+        }
+      }
+    },
+    {
+      "id": "map_accession_mouse",
+      "passed": false,
+      "seconds": 0.0,
+      "outcome": "error",
+      "tools": [],
+      "answer": "",
+      "metrics": {
+        "Tool Correctness": {
+          "score": 0,
+          "passed": false,
+          "reason": "[\n\t Tool Calling Reason: Incorrect tool usage: missing tools ['map_to_genome'] and out-of-order tools ['map_to_genome']; expected ['map_to_genome'], called []. See more details above.\n\t Tool Selection Reason: No available tools were provided to assess tool selection criteria\n]\n"
+        },
+        "Tool arguments": {
+          "score": 0,
+          "passed": false,
+          "reason": "map_to_genome was never called"
+        },
+        "Outcome": {
+          "score": 0,
+          "passed": false,
+          "reason": "agent error: KeyError: 'USE_LLM_PROXY'; ended with 'error', expected 'finish'"
+        },
+        "Answer contains": {
+          "score": 0,
+          "passed": false,
+          "reason": "Missing: chr11"
+        },
+        "Grounded numbers": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "No numbers to check."
+        }
+      }
+    },
+    {
+      "id": "orthologs_all_species",
+      "passed": false,
+      "seconds": 0.0,
+      "outcome": "error",
+      "tools": [],
+      "answer": "",
+      "metrics": {
+        "Tool Correctness": {
+          "score": 0,
+          "passed": false,
+          "reason": "[\n\t Tool Calling Reason: Incorrect tool usage: missing tools ['ensembl_search', 'bgee_lookup'] and out-of-order tools ['ensembl_search', 'bgee_lookup']; expected ['ensembl_search', 'bgee_lookup'], called []. See more details above.\n\t Tool Selection Reason: No available tools were provided to assess tool selection criteria\n]\n"
+        },
+        "Tool arguments": {
+          "score": 0,
+          "passed": false,
+          "reason": "bgee_lookup was never called"
+        },
+        "Outcome": {
+          "score": 0,
+          "passed": false,
+          "reason": "agent error: KeyError: 'USE_LLM_PROXY'; ended with 'error', expected 'finish'"
+        },
+        "Answer contains": {
+          "score": 0,
+          "passed": false,
+          "reason": "Missing: Mus musculus / mouse"
+        },
+        "Grounded numbers": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "No numbers to check."
+        }
+      }
+    },
+    {
+      "id": "orthologs_specific_species",
+      "passed": false,
+      "seconds": 0.0,
+      "outcome": "error",
+      "tools": [],
+      "answer": "",
+      "metrics": {
+        "Tool Correctness": {
+          "score": 0,
+          "passed": false,
+          "reason": "[\n\t Tool Calling Reason: Incorrect tool usage: missing tools ['ensembl_search', 'bgee_lookup'] and out-of-order tools ['ensembl_search', 'bgee_lookup']; expected ['ensembl_search', 'bgee_lookup'], called []. See more details above.\n\t Tool Selection Reason: No available tools were provided to assess tool selection criteria\n]\n"
+        },
+        "Tool arguments": {
+          "score": 0,
+          "passed": false,
+          "reason": "bgee_lookup was never called"
+        },
+        "Outcome": {
+          "score": 0,
+          "passed": false,
+          "reason": "agent error: KeyError: 'USE_LLM_PROXY'; ended with 'error', expected 'finish'"
+        },
+        "Answer contains": {
+          "score": 0,
+          "passed": false,
+          "reason": "Missing: tp53 / TP53; zebrafish / Danio rerio"
+        },
+        "Grounded numbers": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "No numbers to check."
+        }
+      }
+    },
+    {
+      "id": "expression_tissues",
+      "passed": false,
+      "seconds": 0.0,
+      "outcome": "error",
+      "tools": [],
+      "answer": "",
+      "metrics": {
+        "Tool Correctness": {
+          "score": 0,
+          "passed": false,
+          "reason": "[\n\t Tool Calling Reason: Incorrect tool usage: missing tools ['ensembl_search', 'bgee_lookup'] and out-of-order tools ['ensembl_search', 'bgee_lookup']; expected ['ensembl_search', 'bgee_lookup'], called []. See more details above.\n\t Tool Selection Reason: No available tools were provided to assess tool selection criteria\n]\n"
+        },
+        "Tool arguments": {
+          "score": 0,
+          "passed": false,
+          "reason": "bgee_lookup was never called"
+        },
+        "Outcome": {
+          "score": 0,
+          "passed": false,
+          "reason": "agent error: KeyError: 'USE_LLM_PROXY'; ended with 'error', expected 'finish'"
+        },
+        "Answer contains": {
+          "score": 0,
+          "passed": false,
+          "reason": "Missing: intestin / duodenum / ileum / jejunum / kidney / testis"
+        },
+        "Grounded numbers": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "No numbers to check."
+        }
+      }
+    },
+    {
+      "id": "routing_protein_not_orthologs",
+      "passed": false,
+      "seconds": 0.0,
+      "outcome": "error",
+      "tools": [],
+      "answer": "",
+      "metrics": {
+        "Tool Correctness": {
+          "score": 0,
+          "passed": false,
+          "reason": "[\n\t Tool Calling Reason: Incorrect tool usage: missing tools ['get_ensembl_sequence', 'ensembl_search'] and out-of-order tools ['get_ensembl_sequence', 'ensembl_search']; expected ['ensembl_search', 'get_ensembl_sequence'], called []. See more details above.\n\t Tool Selection Reason: No available tools were provided to assess tool selection criteria\n]\n"
+        },
+        "Tool arguments": {
+          "score": 0,
+          "passed": false,
+          "reason": "ensembl_search was never called | get_ensembl_sequence was never called"
+        },
+        "Outcome": {
+          "score": 0,
+          "passed": false,
+          "reason": "agent error: KeyError: 'USE_LLM_PROXY'; ended with 'error', expected 'finish'"
+        },
+        "Answer contains": {
+          "score": 0,
+          "passed": false,
+          "reason": "Missing: tp53 / TP53"
+        },
+        "Grounded numbers": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "No numbers to check."
+        }
+      }
+    },
+    {
+      "id": "missing_sequence",
+      "passed": false,
+      "seconds": 0.0,
+      "outcome": "error",
+      "tools": [],
+      "answer": "",
+      "metrics": {
+        "Tool arguments": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "No argument constraints for this case."
+        },
+        "Outcome": {
+          "score": 0,
+          "passed": false,
+          "reason": "agent error: KeyError: 'USE_LLM_PROXY'; ended with 'error', expected 'abort'"
+        },
+        "Answer contains": {
+          "score": 0,
+          "passed": false,
+          "reason": "Missing: sequence"
+        },
+        "Grounded numbers": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "No numbers to check."
+        }
+      }
+    },
+    {
+      "id": "out_of_scope",
+      "passed": false,
+      "seconds": 0.0,
+      "outcome": "error",
+      "tools": [],
+      "answer": "",
+      "metrics": {
+        "Tool arguments": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "No argument constraints for this case."
+        },
+        "Outcome": {
+          "score": 0,
+          "passed": false,
+          "reason": "agent error: KeyError: 'USE_LLM_PROXY'; ended with 'error', expected 'abort'"
+        },
+        "Answer contains": {
+          "score": 0,
+          "passed": false,
+          "reason": "Missing: structure / cannot / can't / not able / unable / outside"
+        },
+        "Grounded numbers": {
+          "score": 1.0,
+          "passed": true,
+          "reason": "No numbers to check."
+        }
+      }
+    }
+  ]
+}
