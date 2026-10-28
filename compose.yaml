@@ -2,6 +2,8 @@ services:
   agent:
     build:
       context: .
+    env_file:
+      - .env 
     ports:
       - "9999:9999"
     restart: unless-stopped

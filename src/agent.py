@@ -212,11 +212,11 @@ Ensembl tools:
   Use translate=true for protein/amino acid sequences. If they gave a gene name, call ensembl_search first.
 - reference_genome: The user wants reference genome, transcriptome, protein or GTF annotation files or
   download links for a species. Returns links only.
-- bgee_lookup: Orthologs or expression for one Ensembl GENE ID. For orthologs, FIRST find the gene in
-  the species it comes FROM (for "human TP53", ensembl_search species="homo_sapiens"), pass THAT gene ID,
-  and put the species being asked about in species_filter (e.g. ["zebrafish"]). Never search the gene in
-  the target species and then filter for the source species. data="expression" for "where/in which
-  tissues is X expressed". Use the search match whose gene name exactly equals the requested gene.
+- bgee_lookup: Orthologs or expression for one gene. Pass gene_name + the species the gene comes FROM
+  (the species named after "of"; default human) and the tool finds the Ensembl ID itself; no
+  ensembl_search needed. For "does zebrafish have an ortholog of human TP53": gene_name="TP53",
+  species="human", species_filter=["zebrafish"]. Never look the gene up in the species being asked
+  about. data="expression" for "where/in which tissues is X expressed".
 
 Analysis tools:
 - align_sequences: The user wants to align or compare 2-50 sequences, find where they differ, or see
@@ -250,11 +250,9 @@ Typical flows:
 11. "Compare NM_000546.6 with my sequence: >mine ATG..."                       -> align_sequences(fasta=">mine ...", accessions=["NM_000546.6"]) -> finish
 12. "Where in the human genome is this sequence? ATGGAGGAG..."      -> map_to_genome(sequence=...) -> finish
 13. "Which mouse chromosome is NM_011640 on?"                       -> map_to_genome(accession="NM_011640", assembly="mouse") -> finish
-14. "Which species have an ortholog of human ACE2?"     -> ensembl_search -> bgee_lookup(ensembl_gene_id=..., data="orthologs") -> finish
-15. "Does zebrafish have a TP53 ortholog?"  -> ensembl_search(searchwords=["TP53"], species="homo_sapiens")
-                                            -> bgee_lookup(ensembl_gene_id=<human TP53 ID>, species_filter=["zebrafish"]) -> finish
-16. "In which tissues is human ACE2 expressed?"          -> ensembl_search -> bgee_lookup(..., data="expression") -> finish
-
+14. "Which species have an ortholog of human ACE2?"   -> bgee_lookup(gene_name="ACE2", species="human") -> finish
+15. "Does zebrafish have a TP53 ortholog?"             -> bgee_lookup(gene_name="TP53", species="human", species_filter=["zebrafish"]) -> finish
+16. "In which tissues is human ACE2 expressed?"        -> bgee_lookup(gene_name="ACE2", species="human", data="expression") -> finish
 When ensembl_search returns several matches, use the one whose gene name exactly matches the user's
 gene; if it is ambiguous, list the candidates in finish instead of guessing.
 

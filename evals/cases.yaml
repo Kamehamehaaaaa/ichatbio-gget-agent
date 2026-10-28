@@ -16,7 +16,6 @@
 #   grounded_threshold  default 0.8; share of answer numbers that must appear in tool outputs
 #   slow             true = BLAST / NCBI Virus (minutes); skip with:  pytest evals -m "not slow"
 
-# ── NCBI nuccore ──────────────────────────────────────────────────────────────
 
 - id: record_by_accession
   query: Retrieve the nucleotide sequence for NCBI accession NM_000546.6
@@ -38,8 +37,6 @@
   answer_contains:
     - [SARS-CoV-2, severe acute respiratory syndrome coronavirus 2]
   expected_answer: MN908947 is a SARS-CoV-2 (severe acute respiratory syndrome coronavirus 2) genome, read directly from the record without BLAST.
-
-# ── BLAST ─────────────────────────────────────────────────────────────────────
 
 - id: blast_pasted_nucleotide
   slow: true
@@ -74,8 +71,6 @@
     - insulin
   expected_answer: The top hit is human insulin (preproinsulin), followed by insulin from other mammals, with % identity and e-values.
 
-# ── NCBI Virus ────────────────────────────────────────────────────────────────
-
 - id: virus_filtered
   slow: true
   query: Get complete Zika virus genomes from human hosts collected in Brazil during 2016
@@ -100,8 +95,6 @@
   answer_contains:
     - [measles, morbillivirus]
   expected_answer: Returns the measles virus RefSeq reference genome (a single record) with its metadata saved as artifacts.
-
-# ── Ensembl ───────────────────────────────────────────────────────────────────
 
 - id: ensembl_search_gene
   query: Find the Ensembl ID for the human angiotensin converting enzyme 2 gene
@@ -156,8 +149,6 @@
     - [.fa, fasta, dna]
   expected_answer: Gives Ensembl download links for the zebrafish genome FASTA and GTF with release number and file sizes; nothing is downloaded.
 
-# ── Alignment (gget.muscle) ───────────────────────────────────────────────────
-
 - id: align_proteins
   query: Align these insulin sequences and tell me which two are most similar.
   sequence: |
@@ -187,8 +178,6 @@
     - ["20,000", "20000", limit, too long, gene, region]
   expected_answer: The genomes (~30,000 bases each) exceed the 20,000-residue alignment limit; suggests aligning a single gene or region instead. No alignment results are invented.
 
-# ── Genome location (gget.blat) ───────────────────────────────────────────────
-
 - id: map_sequence_human
   query: Where in the human genome is this sequence located?
   sequence: ATGGAGGAGCCGCAGTCAGATCCTAGCGTCGAGCCCCCTCTGAGTCAGGAAACATTTTCAGACCTATGGAAACTACTTCCTGAAAACAACGTTCTGTCCCCCTTGCCGTCCCAAGCAATGG
@@ -210,7 +199,6 @@
     - chr11
   expected_answer: Mouse Trp53 (NM_011640) maps to chr11 in mm39, with exons as separate nearby hits.
 
-# ── Orthologs and expression (gget.bgee) ──────────────────────────────────────
 
 - id: orthologs_all_species
   query: Which species have an ortholog of human ACE2?
@@ -244,8 +232,6 @@
     - [intestin, duodenum, ileum, jejunum, kidney, testis]
   expected_answer: ACE2 is most highly expressed in the small intestine (duodenum/ileum), kidney and testis, ranked by Bgee expression score.
 
-# ── Routing checks ────────────────────────────────────────────────────────────
-
 - id: routing_protein_not_orthologs
   query: Get the protein sequence of zebrafish tp53
   expected_tools:
@@ -256,8 +242,6 @@
   forbidden_tools: [bgee_lookup, run_blast_sync]
   answer_contains:
     - [tp53, TP53]
-
-# ── Failure paths ─────────────────────────────────────────────────────────────
 
 - id: missing_sequence
   query: BLAST my sequence and tell me what species it is
@@ -276,3 +260,112 @@
   answer_contains:
     - [structure, cannot, can't, not able, unable, outside]
   expected_answer: Explains that structure prediction is outside the agent's capabilities.
+
+- id: virus_unfiltered_defaults_refseq
+  # get_virus guard: a bare virus name must NOT download every record; it should fall back to RefSeq quickly
+  query: Get measles virus genomes
+  expected_tools:
+    - name: get_virus
+      args: {virus: measles}
+  answer_contains:
+    - [refseq, RefSeq, reference]
+  expected_answer: With no filters given, only the RefSeq reference genome for measles is returned (one record), and the answer explains how to widen the search with filters.
+
+- id: align_two_accessions
+  query: Align the human TP53 mRNA NM_000546.6 with the mouse Trp53 mRNA NM_011640 and tell me how similar they are
+  expected_tools:
+    - name: align_sequences
+      args: {accessions: [NM_000546, NM_011640]}
+  forbidden_tools: [run_blast_sync]
+  answer_contains:
+    - ["%", identity, identical]
+  expected_answer: Both mRNAs are fetched from NCBI and aligned; the answer reports their pairwise % identity and share of conserved columns.
+
+- id: align_pasted_plus_accession
+  query: Compare my sequence with the human TP53 mRNA NM_000546.6 and show where they differ
+  sequence: |
+    >mine
+    ATGGAGGAGCCGCAGTCAGATCCTAGCGTCGAGCCCCCTCTGAGTCAGGAAACATTTTCAGACCTATGGAAACTACTTCCTGAAAACAACGTTCTGTCCCCCTTGCCGTCCCAAGCAATGG
+  expected_tools:
+    - name: align_sequences
+      args: {fasta: $present, accessions: [NM_000546]}
+  forbidden_tools: [run_blast_sync, map_to_genome]
+  answer_contains:
+    - ["%", identity, identical, position, differ]
+
+- id: map_species_name_assembly
+  # species name must map to the right UCSC assembly (zebrafish -> danRer11), not silently default to human
+  query: Which chromosome is the zebrafish tp53 transcript NM_131327 on in the zebrafish genome?
+  expected_tools:
+    - name: map_to_genome
+      args: {accession: NM_131327, assembly: {any_of: [zebrafish, danio, danRer]}}
+  forbidden_tools: [run_blast_sync]
+  answer_contains:
+    - chr
+    - [danRer11, zebrafish, Danio]
+
+- id: routing_gene_location_by_name
+  # a gene NAME asks for annotation (gene_info), not BLAT on a sequence
+  query: Where is the ACE2 gene located in the human genome?
+  expected_tools:
+    - name: ensembl_search
+      args: {species: {any_of: [homo, human]}}
+    - name: gene_info
+  forbidden_tools: [map_to_genome, run_blast_sync]
+  answer_contains:
+    - [chrX, chromosome X, X chromosome]
+  expected_answer: Human ACE2 (ENSG00000130234) is on the X chromosome, with its start and end coordinates from Ensembl.
+
+- id: gene_location_and_protein_chain
+  # three-step chain: search -> info -> protein, in one request
+  query: For human BRCA1, give me its chromosome location and the length of its protein
+  expected_tools:
+    - name: ensembl_search
+      args: {species: {any_of: [homo, human]}}
+    - name: gene_info
+    - name: get_ensembl_sequence
+      args: {translate: true}
+  ordered: false
+  answer_contains:
+    - [chr17, chromosome 17]
+    - "1863"
+  expected_answer: BRCA1 is on chromosome 17 and its canonical protein is 1,863 amino acids.
+
+- id: orthologs_multiple_species_common_names
+  # common names must map to Bgee's scientific names
+  query: Do chicken and mouse have orthologs of human ACE2?
+  expected_tools:
+    - name: ensembl_search
+      args: {species: {any_of: [homo, human]}}
+    - name: bgee_lookup
+      args:
+        ensembl_gene_id: ENSG00000130234
+        data: orthologs
+        species_filter: [{any_of: [chicken, gallus]}, {any_of: [mouse, mus]}]
+  answer_contains:
+    - [Gallus gallus, chicken]
+    - [Mus musculus, mouse]
+    - [Ace2, ACE2]
+
+- id: expression_non_human_gene
+  query: In which tissues is the mouse Ins2 gene expressed?
+  expected_tools:
+    - name: ensembl_search
+      args: {species: {any_of: [mus, mouse]}}
+    - name: bgee_lookup
+      args: {data: expression}
+  answer_contains:
+    - [pancrea, islet]
+  expected_answer: Mouse Ins2 is most highly expressed in the pancreas (islets of Langerhans), ranked by Bgee expression score.
+
+- id: invalid_accession
+  # error path: a nonexistent accession must be reported honestly, not answered with invented data
+  query: Retrieve the sequence for NCBI accession NM_999999999
+  expected_tools:
+    - name: get_sequence
+      args: {accession: NM_999999999}
+  outcome: either
+  max_tool_calls: 2
+  answer_contains:
+    - [not found, could not, couldn't, no record, invalid, unable, error, does not exist, doesn't exist]
+  expected_answer: Reports that NM_999999999 could not be retrieved from NCBI; no sequence or description is invented.

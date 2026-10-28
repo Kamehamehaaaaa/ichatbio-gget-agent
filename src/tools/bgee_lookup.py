@@ -1,11 +1,12 @@
 import json
+import re
 from typing import Literal
 
 import gget
 import pandas as pd
 
 from context import current_context
-from tools.gget_runner import GgetTimeout, run_gget
+from tools.gget_runner import GgetTimeout, normalize_species, run_gget
 from tools.util import context_tool
 
 MAX_BGEE_SECONDS = 120
@@ -82,42 +83,109 @@ def _summarize_expression(df: pd.DataFrame) -> dict:
     }
 
 
+# Ensembl gene-ID prefix -> species, to know which species a gene ID belongs to
+ID_PREFIX_SPECIES = {
+    "ENSG": "homo sapiens", "ENSMUSG": "mus musculus", "ENSRNOG": "rattus norvegicus",
+    "ENSDARG": "danio rerio", "ENSGALG": "gallus gallus", "ENSBTAG": "bos taurus", "ENSSSCG": "sus scrofa",
+    "ENSCAFG": "canis lupus familiaris", "ENSMMUG": "macaca mulatta", "ENSPTRG": "pan troglodytes",
+    "ENSXETG": "xenopus tropicalis", "ENSECAG": "equus caballus", "ENSOARG": "ovis aries",
+    "ENSFCAG": "felis catus", "ENSOCUG": "oryctolagus cuniculus",
+}
+
+
+class LookupError_(Exception):
+    pass
+
+
+def _species_of_id(gene_id: str) -> str | None:
+    m = re.match(r"(ENS[A-Z]*?G)\d", gene_id.upper())
+    return ID_PREFIX_SPECIES.get(m.group(1)) if m else None
+
+
+async def _resolve_gene(process, gene_name: str, species: str) -> str:
+    """Gene name + species -> Ensembl gene ID, accepting only an exact gene-name match."""
+    try:
+        df = await run_gget(
+            process, gget.search, [gene_name], species=normalize_species(species), id_type="gene",
+            verbose=False, label="Ensembl gene search", timeout_seconds=MAX_BGEE_SECONDS,
+        )
+    except Exception as e:
+        raise LookupError_(f"could not search Ensembl for '{gene_name}' in {species}: {e}")
+    if df is None or len(df) == 0:
+        raise LookupError_(f"no Ensembl gene named '{gene_name}' found in {species}")
+    df = pd.DataFrame(df)
+    exact = df[df["gene_name"].astype(str).str.lower() == gene_name.strip().lower()]
+    if exact.empty:
+        candidates = ", ".join(df["gene_name"].astype(str).head(5))
+        raise LookupError_(
+            f"no gene named exactly '{gene_name}' in {species} (closest names: {candidates}). "
+            "Check the gene symbol and that `species` is the species the gene comes FROM."
+        )
+    return str(exact.iloc[0]["ensembl_id"])
+
+
 @context_tool
 async def bgee_lookup(
-    ensembl_gene_id: str,
+    gene_name: str | None = None,
+    species: str = "human",
+    ensembl_gene_id: str | None = None,
     data: Literal["orthologs", "expression"] = "orthologs",
     species_filter: list[str] | None = None,
 ) -> str:
     """
     Looks up a gene in Bgee (via gget) for either:
     - "orthologs": orthologous genes of this gene across the ~50 animal species Bgee covers, grouped by
-      species (gene name + Ensembl ID). Use for "which species have an ortholog of X", "what is the
-      zebrafish/mouse version of X", or conservation across species.
+      species. Use for "which species have an ortholog of X" or "does zebrafish have an ortholog of X".
     - "expression": tissues/organs where the gene is expressed, ranked by Bgee expression score.
-      Use for "where is X expressed" or "which tissues express X".
 
-    Needs an Ensembl GENE ID (ENSG..., ENSMUSG..., ENSDARG...). If the user gives a gene name, call
-    ensembl_search first and pass the matching gene ID.
+    Identify the gene by NAME + the species it comes FROM (preferred; the tool finds the exact Ensembl ID),
+    or by an Ensembl gene ID. For ortholog questions, the gene's species is the one named after "of":
+      "Does zebrafish have an ortholog of human TP53?" -> gene_name="TP53", species="human",
+                                                          species_filter=["zebrafish"]
+    Never look the gene up in the species being asked about.
 
     Args:
-        ensembl_gene_id: One Ensembl gene ID, e.g. "ENSG00000130234" (human ACE2).
+        gene_name: Gene symbol, e.g. "TP53", "ACE2", "Ins2".
+        species: Species the gene comes FROM, e.g. "human" (default), "mouse", "zebrafish".
+        ensembl_gene_id: Alternatively, an Ensembl gene ID (ENSG..., ENSMUSG..., ENSDARG...).
         data: "orthologs" (default) or "expression".
-        species_filter: For orthologs only: species to check, e.g. ["zebrafish", "Mus musculus"] or
-            ["danio rerio"]. Omit to list orthologs in all species.
+        species_filter: For orthologs only: species to check, e.g. ["zebrafish", "chicken"].
+            Omit to list orthologs in all species.
 
     Returns JSON with the summary, or an ERROR message.
     """
     context = current_context.get()
-    gene_id = ensembl_gene_id.strip()
-    if not gene_id.upper().startswith("ENS") or gene_id.upper().startswith(("ENST", "ENSP")):
-        return (
-            f"ERROR: '{gene_id}' is not an Ensembl gene ID. Bgee needs a gene ID (ENSG..., ENSMUSG..., "
-            "ENSDARG...); call ensembl_search to find it from a gene name."
-        )
-    gene_id = gene_id.split(".")[0]  # Bgee uses unversioned IDs
+    if not gene_name and not ensembl_gene_id:
+        return "ERROR: bgee_lookup needs gene_name (+ species) or ensembl_gene_id."
 
     label = "orthologs" if data == "orthologs" else "expression data"
-    async with context.begin_process(f"Fetching {label} for {gene_id} from Bgee") as process:
+    async with context.begin_process(f"Fetching {label} for {gene_name or ensembl_gene_id} from Bgee") as process:
+        if ensembl_gene_id:
+            gene_id = ensembl_gene_id.strip()
+            if not gene_id.upper().startswith("ENS") or gene_id.upper().startswith(("ENST", "ENSP")):
+                return (
+                    f"ERROR: '{gene_id}' is not an Ensembl gene ID. Pass gene_name and species instead, "
+                    "e.g. gene_name='TP53', species='human'."
+                )
+            gene_id = gene_id.split(".")[0]  # Bgee uses unversioned IDs
+        else:
+            try:
+                gene_id = await _resolve_gene(process, gene_name, species)
+            except LookupError_ as e:
+                await process.log(str(e))
+                return f"ERROR: {e}"
+            await process.log(f"Resolved {gene_name} ({species}) to {gene_id}")
+
+        own_species = _species_of_id(gene_id) or _normalize(species)
+        if data == "orthologs" and species_filter and own_species and any(
+            _normalize(w) in own_species for w in species_filter
+        ):
+            return (
+                f"ERROR: species_filter {species_filter} includes the gene's own species ({own_species}), so "
+                "there is nothing to compare. For 'does <species B> have an ortholog of <species A> GENE', look "
+                "up the gene in species A (gene_name='GENE', species='<A>') and set species_filter=['<B>']."
+            )
+
         try:
             df = await run_gget(
                 process,
@@ -147,14 +215,17 @@ async def bgee_lookup(
 
         await process.create_artifact(
             mimetype="text/csv",
-            description=f"Bgee {label} for {gene_id} ({len(df)} records)",
+            description=f"Bgee {label} for {gene_name or gene_id} ({gene_id}, {len(df)} records)",
             content=df.to_csv(index=False).encode("utf-8"),
-            metadata={"gene_id": gene_id, "data": data},
+            metadata={"gene_id": gene_id, "gene_name": gene_name, "data": data},
         )
 
     summary = _summarize_orthologs(df, species_filter) if data == "orthologs" else _summarize_expression(df)
+    query = {"gene_id": gene_id, "gene_species": own_species}
+    if gene_name:
+        query["gene_name"] = gene_name
     return json.dumps(
-        {"gene_id": gene_id, "data": data, **summary, "note": f"Full {label} table saved as a CSV artifact."},
+        {**query, "data": data, **summary, "note": f"Full {label} table saved as a CSV artifact."},
         default=str,
     )
 
