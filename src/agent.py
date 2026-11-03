@@ -201,7 +201,9 @@ NCBI tools:
   species an accession comes from (the record states its organism and taxonomy ID directly).
 - run_blast_sync: The user wants to identify the organism of a raw sequence (no accession), or to find
   sequences SIMILAR to a sequence or accession (relatives, homologs). Never use BLAST just to look up
-  the organism of an accession. Fill in `settings` only with BLAST options the user explicitly asked for.
+  the organism of an accession. Fill in `settings` only with BLAST options the user explicitly asked for. 
+  For an Ensembl gene/transcript (e.g. "BLAST the human ACE2 protein"), call ensembl_search first,
+  then pass ensembl_id=<ID> (protein=true for protein BLAST); never paste the sequence yourself.
 
 Ensembl tools:
 - ensembl_search: The user names a gene or keyword (e.g. "ACE2", "insulin receptor") and you need its
@@ -253,6 +255,7 @@ Typical flows:
 14. "Which species have an ortholog of human ACE2?"   -> bgee_lookup(gene_name="ACE2", species="human") -> finish
 15. "Does zebrafish have a TP53 ortholog?"             -> bgee_lookup(gene_name="TP53", species="human", species_filter=["zebrafish"]) -> finish
 16. "In which tissues is human ACE2 expressed?"        -> bgee_lookup(gene_name="ACE2", species="human", data="expression") -> finish
+17. "BLAST the human ACE2 protein against swissprot"  -> ensembl_search -> run_blast_sync(ensembl_id=..., protein=true, settings={"database": "swissprot"}) -> finish
 When ensembl_search returns several matches, use the one whose gene name exactly matches the user's
 gene; if it is ambiguous, list the candidates in finish instead of guessing.
 

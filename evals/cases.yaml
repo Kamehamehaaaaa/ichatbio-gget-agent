@@ -369,3 +369,17 @@
   answer_contains:
     - [not found, could not, couldn't, no record, invalid, unable, error, does not exist, doesn't exist]
   expected_answer: Reports that NM_999999999 could not be retrieved from NCBI; no sequence or description is invented.
+
+- id: blast_ensembl_protein
+  slow: true
+  query: BLAST the human ACE2 protein against swissprot and show the top 5 hits
+  expected_tools:
+    - name: ensembl_search
+      args: {species: {any_of: [homo, human]}}
+    - name: run_blast_sync
+      args: {ensembl_id: ENSG00000130234, protein: true, settings: {database: swissprot, limit: 5}}
+  forbidden_tools: [get_ensembl_sequence]
+  answer_contains:
+    - ACE2
+    - ["%", identity]
+  expected_answer: BLAST of the human ACE2 protein against Swiss-Prot returns human ACE2 as the top hit (~100% identity), followed by ACE2 from other mammals.
